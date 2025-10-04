@@ -11,6 +11,8 @@ const ManagerDashboard: React.FC = () => {
     teamMembers: 0
   });
   const [pendingExpenses, setPendingExpenses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchStats();
@@ -19,34 +21,49 @@ const ManagerDashboard: React.FC = () => {
 
   const fetchStats = async () => {
     try {
+      setLoading(true);
+      setError(null);
+      
+      // Get user role from localStorage to determine which API to call
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      const isAdmin = user.role === 'Admin';
+      
       const [pendingResponse, teamResponse] = await Promise.all([
         approvalAPI.getPendingApprovals(),
-        expenseAPI.getAllExpenses()
+        isAdmin ? expenseAPI.getAllExpenses() : expenseAPI.getTeamExpenses()
       ]);
       
-      const pending = pendingResponse.data;
-      const teamExpenses = teamResponse.data;
+      const pending = pendingResponse.data || [];
+      const teamExpenses = teamResponse.data || [];
       
       const currentMonth = new Date().getMonth();
-      const monthlyExpenses = teamExpenses.filter((e: any) => 
-        new Date(e.createdAt).getMonth() === currentMonth
-      );
+      const currentYear = new Date().getFullYear();
       
-      setStats({
+      const monthlyExpenses = teamExpenses.filter((e: any) => {
+        const expenseDate = new Date(e.createdAt || e.date);
+        return expenseDate.getMonth() === currentMonth && expenseDate.getFullYear() === currentYear;
+      });
+      
+      const newStats = {
         pendingApprovals: pending.length,
         approved: monthlyExpenses.filter((e: any) => e.status === 'Approved').length,
         rejected: monthlyExpenses.filter((e: any) => e.status === 'Rejected').length,
-        teamMembers: new Set(teamExpenses.map((e: any) => e.employeeId?._id)).size
-      });
-    } catch (error) {
+        teamMembers: new Set(teamExpenses.map((e: any) => e.employeeId?._id || e.employeeId).filter(Boolean)).size
+      };
+      
+      setStats(newStats);
+    } catch (error: any) {
       console.error('Error fetching stats:', error);
+      setError(error.response?.data?.error || error.message || 'Failed to load dashboard data');
+    } finally {
+      setLoading(false);
     }
   };
 
   const fetchPendingExpenses = async () => {
     try {
       const response = await approvalAPI.getPendingApprovals();
-      setPendingExpenses(response.data.slice(0, 3));
+      setPendingExpenses((response.data || []).slice(0, 3));
     } catch (error) {
       console.error('Error fetching pending expenses:', error);
     }
@@ -57,8 +74,10 @@ const ManagerDashboard: React.FC = () => {
       await approvalAPI.processApproval(expenseId, decision, `Quick ${decision.toLowerCase()} from dashboard`);
       fetchStats();
       fetchPendingExpenses();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error processing approval:', error);
+      const errorMessage = error.response?.data?.error || 'Failed to process approval';
+      alert(`Error: ${errorMessage}`);
     }
   };
 
@@ -79,6 +98,41 @@ const ManagerDashboard: React.FC = () => {
       </div>
     </div>
   );
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="flex justify-center items-center h-64">
+          <div className="flex items-center space-x-3">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <div className="text-lg font-medium text-gray-600">Loading dashboard...</div>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (error) {
+    return (
+      <Layout>
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+          <div className="flex items-center">
+            <div className="text-red-500 text-xl mr-3">⚠️</div>
+            <div>
+              <h3 className="text-lg font-medium text-red-800">Error Loading Dashboard</h3>
+              <p className="text-red-600 mt-1">{error}</p>
+              <button 
+                onClick={() => { fetchStats(); fetchPendingExpenses(); }}
+                className="mt-3 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+              >
+                Retry
+              </button>
+            </div>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>

@@ -47,11 +47,17 @@ const submitExpense = async (req, res) => {
 
 const getMyExpenses = async (req, res) => {
   try {
+    console.log('getMyExpenses - User ID:', req.user._id);
+    console.log('getMyExpenses - User:', req.user.name, req.user.email);
+    
     const expenses = await Expense.find({ employeeId: req.user._id })
-      .populate('approvals.approverId', 'name email')
+      .populate('approvals.approverId', 'name email role')
       .sort({ createdAt: -1 });
+    
+    console.log('Found expenses:', expenses.length);
     res.json(expenses);
   } catch (error) {
+    console.error('getMyExpenses error:', error);
     res.status(400).json({ error: error.message });
   }
 };
@@ -71,12 +77,13 @@ const getAllExpenses = async (req, res) => {
 const getTeamExpenses = async (req, res) => {
   try {
     const User = require('../models/User');
+    const companyId = req.user.companyId._id || req.user.companyId;
     
     if (req.user.role === 'Admin') {
-      // Admin sees all company expenses
-      const expenses = await Expense.find({ companyId: req.user.companyId._id })
+      // Admin sees only their company expenses
+      const expenses = await Expense.find({ companyId })
         .populate('employeeId', 'name email')
-        .populate('approvals.approverId', 'name email')
+        .populate('approvals.approverId', 'name email role')
         .sort({ createdAt: -1 });
       return res.json(expenses);
     }
@@ -92,10 +99,10 @@ const getTeamExpenses = async (req, res) => {
     const teamMemberIds = teamMembers.map(member => member._id);
     const expenses = await Expense.find({ 
       employeeId: { $in: teamMemberIds },
-      companyId: req.user.companyId._id 
+      companyId 
     })
       .populate('employeeId', 'name email')
-      .populate('approvals.approverId', 'name email')
+      .populate('approvals.approverId', 'name email role')
       .sort({ createdAt: -1 });
     res.json(expenses);
   } catch (error) {

@@ -9,6 +9,8 @@ const userRoutes = require('./routes/users');
 const expenseRoutes = require('./routes/expenses');
 const approvalRoutes = require('./routes/approvals');
 const serviceRoutes = require('./routes/services');
+const analyticsRoutes = require('./routes/analytics');
+const exportRoutes = require('./routes/exports');
 
 const app = express();
 
@@ -25,6 +27,8 @@ app.use('/auth', authRoutes);
 app.use('/users', userRoutes);
 app.use('/expenses', expenseRoutes);
 app.use('/approvals', approvalRoutes);
+app.use('/analytics', analyticsRoutes);
+app.use('/export', exportRoutes);
 app.use('/', serviceRoutes);
 
 // Error handling middleware

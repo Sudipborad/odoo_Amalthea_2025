@@ -1,0 +1,92 @@
+1. Core Objective
+Build a system where:
+•	Employees can submit expenses.
+•	Managers/Admins can approve/reject them.
+•	Supports multi-level and conditional approvals.
+•	Supports multiple currencies and OCR for receipts.
+________________________________________
+2. Roles & Permissions
+👩💻 Employee
+•	Submit expense (amount, category, description, date, receipt upload).
+•	View submitted expenses and their status (Pending / Approved / Rejected).
+•	OCR auto-fill → scan receipt → system auto-fills fields.
+👨💼 Manager
+•	See expenses submitted by employees in their team.
+•	Approve/Reject with comments.
+•	See all amounts in company’s default currency.
+•	Escalate expenses if required.
+🏢 Admin
+•	Auto-created when a company is created (on signup).
+•	Can:
+o	Manage users (create employee/manager, assign/change roles).
+o	Define approval rules (sequence + conditional).
+o	Override approvals (force approve/reject).
+o	View all company expenses.
+________________________________________
+3. Expense Submission
+•	Fields:
+o	Amount (can be in any currency)
+o	Category (Food, Travel, Accommodation, etc.)
+o	Description
+o	Date
+o	Receipt Upload
+•	Currency conversion → amount shown in company’s base currency using API.
+________________________________________
+4. Approval Workflow
+•	Multi-Level Approvals:
+Example: Manager → Finance → Director.
+Moves step by step only after current approver approves.
+•	Conditional Approvals:
+o	Percentage Rule → If 60% approve, expense = approved.
+o	Specific Approver Rule → If CFO approves, auto-approved.
+o	Hybrid → (60% OR CFO approves).
+•	Flow Example:
+•	Employee submits expense → Manager approves → Finance approves → Director approves → Final Status: Approved
+________________________________________
+5. APIs to Use
+•	Country & Currency Info API:
+https://restcountries.com/v3.1/all?fields=name,currencies
+•	Currency Conversion API:
+https://api.exchangerate-api.com/v4/latest/{BASE_CURRENCY}
+________________________________________
+6. OCR Functionality
+•	Employee uploads receipt → OCR extracts:
+o	Amount
+o	Date
+o	Merchant Name (Restaurant, Hotel, etc.)
+o	Category
+•	Auto-fills expense form (employee can edit before submission).
+________________________________________
+7. Authentication & User Management
+•	On first signup → Company + Admin created automatically.
+•	Admin defines:
+o	Company’s base currency (from API).
+o	Employees & Managers.
+o	Reporting relationships.
+________________________________________
+8. Optional (to impress interviewers)
+•	Expense Analytics Dashboard:
+o	Total expenses by category.
+o	Approved vs Rejected statistics.
+•	Notifications:
+o	Employee gets notification when expense is approved/rejected.
+•	Export reports (CSV/Excel).
+________________________________________
+✅ What You Need to Build (Step by Step)
+1.	Authentication System
+o	Signup/Login → Auto-create company + admin.
+2.	User Management
+o	Admin creates employees and managers.
+o	Assigns reporting managers.
+3.	Expense Module
+o	Employee submits expenses.
+o	Currency conversion applied.
+o	OCR receipt auto-fill.
+4.	Approval Workflow
+o	Multi-level sequence setup.
+o	Conditional rules (60%, CFO, hybrid).
+o	Status changes after each approval.
+5.	Admin Dashboard
+o	View all expenses.
+o	Manage users, rules, and override approvals.
+

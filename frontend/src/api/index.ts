@@ -11,6 +11,7 @@ const api = axios.create({
 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
+  console.log('Token from localStorage:', token ? 'exists' : 'missing');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -23,7 +24,9 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
+      localStorage.removeItem('company');
       window.location.href = '/login';
+      return Promise.reject(new Error('Session expired. Please login again.'));
     }
     
     // Show user-friendly error messages
@@ -48,6 +51,10 @@ export const userAPI = {
     api.put(`/users/${id}/role`, { role }),
   assignManager: (id: string, managerId: string) => 
     api.put(`/users/${id}/manager`, { managerId }),
+  deleteUser: (id: string) => 
+    api.delete(`/users/${id}`),
+  getAllUsers: () => 
+    api.get('/users'),
 };
 
 export const expenseAPI = {
@@ -70,6 +77,8 @@ export const approvalAPI = {
     api.post('/approvals/rules', data),
   getApprovalRules: () => 
     api.get('/approvals/rules'),
+  deleteApprovalRule: (ruleId: string) => 
+    api.delete(`/approvals/rules/${ruleId}`),
   overrideApproval: (expenseId: string, status: string) => 
     api.put(`/approvals/${expenseId}/override`, { status }),
 };
@@ -82,6 +91,11 @@ export const serviceAPI = {
   },
   convertCurrency: (from: string, to: string, amount: number) => 
     api.get(`/currency/convert?from=${from}&to=${to}&amount=${amount}`),
+};
+
+export const analyticsAPI = {
+  getExpenseAnalytics: () => 
+    api.get('/analytics/expenses'),
 };
 
 export default api;

@@ -12,6 +12,7 @@ import Approvals from './pages/Approvals';
 import TeamExpenses from './pages/TeamExpenses';
 import UserManagement from './pages/UserManagement';
 import ApprovalRules from './pages/ApprovalRules';
+import Analytics from './pages/Analytics';
 import ProtectedRoute from './components/ProtectedRoute';
 import './App.css';
 
@@ -64,6 +65,11 @@ function App() {
                 <AdminDashboard />
               </ProtectedRoute>
             } />
+            <Route path="/cfo" element={
+              <ProtectedRoute role="CFO">
+                <ManagerDashboard />
+              </ProtectedRoute>
+            } />
             <Route path="/users" element={
               <ProtectedRoute role="Admin">
                 <UserManagement />
@@ -72,6 +78,11 @@ function App() {
             <Route path="/approval-rules" element={
               <ProtectedRoute role="Admin">
                 <ApprovalRules />
+              </ProtectedRoute>
+            } />
+            <Route path="/analytics" element={
+              <ProtectedRoute role={["Manager", "Admin"]}>
+                <Analytics />
               </ProtectedRoute>
             } />
             

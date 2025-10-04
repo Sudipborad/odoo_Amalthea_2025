@@ -12,6 +12,7 @@ const expenseSchema = new mongoose.Schema({
   receiptUrl: String,
   status: { type: String, enum: ['Pending', 'Approved', 'Rejected'], default: 'Pending' },
   submittedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  approvalRuleId: { type: mongoose.Schema.Types.ObjectId, ref: 'ApprovalRule' },
   approvals: [{
     approverId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     decision: { type: String, enum: ['Approved', 'Rejected', 'Pending'], default: 'Pending' },

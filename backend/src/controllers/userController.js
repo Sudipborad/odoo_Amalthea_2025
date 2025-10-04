@@ -85,4 +85,30 @@ const assignManager = async (req, res) => {
   }
 };
 
-module.exports = { createUser, updateUserRole, assignManager, getAllUsers };
+const deleteUser = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    const Expense = require('../models/Expense');
+    const pendingExpenses = await Expense.find({ 
+      employeeId: req.params.id, 
+      status: 'Pending' 
+    });
+    
+    if (pendingExpenses.length > 0) {
+      return res.status(400).json({ 
+        error: 'Cannot delete user with pending expenses' 
+      });
+    }
+    
+    await User.findByIdAndDelete(req.params.id);
+    res.json({ message: 'User deleted successfully' });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
+module.exports = { createUser, updateUserRole, assignManager, deleteUser, getAllUsers };

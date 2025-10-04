@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
-import axios from 'axios';
+import { expenseAPI } from '../api';
 
 const MyExpenses: React.FC = () => {
   const [expenses, setExpenses] = useState([]);
@@ -8,11 +8,20 @@ const MyExpenses: React.FC = () => {
 
   useEffect(() => {
     fetchExpenses();
+    
+    // Auto-refresh every 30 seconds to show updated approval statuses
+    const interval = setInterval(fetchExpenses, 30000);
+    
+    return () => clearInterval(interval);
   }, []);
 
   const fetchExpenses = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/expenses/me');
+      const response = await expenseAPI.getMyExpenses();
+      console.log('Expenses data:', response.data);
+      if (response.data.length > 0) {
+        console.log('First expense approvals:', response.data[0].approvals);
+      }
       setExpenses(response.data);
     } catch (error) {
       console.error('Error fetching expenses:', error);
@@ -43,7 +52,15 @@ const MyExpenses: React.FC = () => {
   return (
     <Layout>
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold text-gray-900">My Expenses</h1>
+        <div className="flex justify-between items-center">
+          <h1 className="text-2xl font-bold text-gray-900">My Expenses</h1>
+          <button
+            onClick={fetchExpenses}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Refresh
+          </button>
+        </div>
         
         <div className="bg-white rounded-lg shadow-sm border">
           <div className="px-6 py-4 border-b border-gray-200">
@@ -102,19 +119,34 @@ const MyExpenses: React.FC = () => {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-900">
-                        <div className="space-y-1">
-                          {expense.approvals?.map((approval: any, index: number) => (
-                            <div key={index} className="text-xs">
-                              <span className="font-medium">{approval.approverId?.name || 'Unknown'}</span>
-                              <span className={`ml-2 ${approval.decision === 'Approved' ? 'text-green-600' : approval.decision === 'Rejected' ? 'text-red-600' : 'text-yellow-600'}`}>
-                                {approval.decision.toLowerCase()}
-                              </span>
-                              {approval.comments && (
-                                <div className="text-gray-500 italic">{approval.comments}</div>
-                              )}
-                            </div>
-                          ))}
-                        </div>
+                        {expense.approvals && expense.approvals.length > 0 ? (
+                          <div className="space-y-1">
+                            {expense.approvals.map((approval: any, index: number) => {
+                              const approverName = approval.approverId?.name || 'Unknown';
+                              const approverRole = approval.approverId?.role || 'Role';
+                              const decision = approval.decision || 'Pending';
+                              
+                              return (
+                                <div key={index} className="flex items-center justify-between">
+                                  <span className="text-xs text-gray-700">
+                                    {approverName} ({approverRole})
+                                  </span>
+                                  <span className={`px-2 py-1 rounded text-xs font-medium ${
+                                    decision === 'Approved' 
+                                      ? 'bg-green-100 text-green-800' 
+                                      : decision === 'Rejected' 
+                                      ? 'bg-red-100 text-red-800' 
+                                      : 'bg-yellow-100 text-yellow-800'
+                                  }`}>
+                                    {decision.toLowerCase()}
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          <span className="text-gray-500 text-xs">No approvers assigned</span>
+                        )}
                       </td>
                     </tr>
                   ))

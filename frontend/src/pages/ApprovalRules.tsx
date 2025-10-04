@@ -6,10 +6,12 @@ const ApprovalRules: React.FC = () => {
   const [rules, setRules] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
+    name: '',
     sequence: [{ step: 1, approverRole: 'Manager' }],
     percentageRule: 60,
     specificApproverId: '',
-    hybrid: false
+    hybrid: false,
+    amountThreshold: 0
   });
 
   useEffect(() => {
@@ -33,6 +35,17 @@ const ApprovalRules: React.FC = () => {
       fetchRules();
     } catch (error) {
       console.error('Error creating rule:', error);
+    }
+  };
+
+  const handleDeleteRule = async (ruleId: string, ruleName: string) => {
+    if (window.confirm(`Are you sure you want to delete the rule "${ruleName}"?`)) {
+      try {
+        await approvalAPI.deleteApprovalRule(ruleId);
+        fetchRules();
+      } catch (error) {
+        console.error('Error deleting rule:', error);
+      }
     }
   };
 
@@ -62,6 +75,20 @@ const ApprovalRules: React.FC = () => {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Rule Name
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  placeholder="Enter rule name"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Approval Sequence
                 </label>
                 {formData.sequence.map((step, index) => (
@@ -77,9 +104,9 @@ const ApprovalRules: React.FC = () => {
                       className="px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                     >
                       <option value="Manager">Manager</option>
-                      <option value="Admin">Admin</option>
                       <option value="Finance">Finance</option>
                       <option value="Director">Director</option>
+                      <option value="Admin">Admin</option>
                     </select>
                   </div>
                 ))}
@@ -92,18 +119,33 @@ const ApprovalRules: React.FC = () => {
                 </button>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Percentage Rule (%)
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  max="100"
-                  value={formData.percentageRule}
-                  onChange={(e) => setFormData({ ...formData, percentageRule: parseInt(e.target.value) })}
-                  className="px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Percentage Rule (%)
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="100"
+                    value={formData.percentageRule}
+                    onChange={(e) => setFormData({ ...formData, percentageRule: parseInt(e.target.value) })}
+                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Amount Threshold ($)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={formData.amountThreshold}
+                    onChange={(e) => setFormData({ ...formData, amountThreshold: parseInt(e.target.value) })}
+                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                    placeholder="0 for all amounts"
+                  />
+                </div>
               </div>
 
               <div className="flex items-center">
@@ -145,7 +187,16 @@ const ApprovalRules: React.FC = () => {
             ) : (
               rules.map((rule: any) => (
                 <div key={rule._id} className="border rounded-lg p-4 mb-4">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="flex justify-between items-start mb-4">
+                    <h3 className="text-lg font-semibold text-gray-900">{rule.name}</h3>
+                    <button
+                      onClick={() => handleDeleteRule(rule._id, rule.name)}
+                      className="text-red-600 hover:text-red-800 text-sm"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div>
                       <h4 className="font-medium">Sequence</h4>
                       {rule.sequence.map((step: any, index: number) => (
@@ -157,6 +208,10 @@ const ApprovalRules: React.FC = () => {
                     <div>
                       <h4 className="font-medium">Percentage Rule</h4>
                       <p className="text-sm text-gray-600">{rule.percentageRule}%</p>
+                    </div>
+                    <div>
+                      <h4 className="font-medium">Amount Threshold</h4>
+                      <p className="text-sm text-gray-600">{rule.amountThreshold || 0}</p>
                     </div>
                     <div>
                       <h4 className="font-medium">Hybrid</h4>

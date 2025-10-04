@@ -54,6 +54,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             <path d="M16 4c0-1.11.89-2 2-2s2 .89 2 2-.89 2-2 2-2-.89-2-2zm4 18v-6h2.5l-2.54-7.63A3.01 3.01 0 0 0 16.98 6c-.8 0-1.54.37-2.01.97L12 11.13l-2.97-4.16C8.56 6.37 7.82 6 7.02 6c-1.3 0-2.4.84-2.78 2.05L1.5 16H4v6h16zM12.5 11.5c.83 0 1.5-.67 1.5-1.5s-.67-1.5-1.5-1.5S11 9.17 11 10s.67 1.5 1.5 1.5z"/>
           </svg>
         )},
+        { name: 'Analytics', path: '/analytics', icon: (
+          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+          </svg>
+        )},
       ];
     }
     if (user?.role === 'Admin') {
@@ -83,6 +88,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.94-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
           </svg>
         )},
+        { name: 'Analytics', path: '/analytics', icon: (
+          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+          </svg>
+        )},
       ];
     }
     return [];
@@ -93,51 +103,61 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
     <div className="flex h-screen bg-gray-50">
       {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-secondary transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}>
-        <div className="flex items-center justify-center h-16 bg-secondary border-b border-gray-700">
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-              <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4zM18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" />
+      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-gradient-to-b from-slate-900 to-slate-800 shadow-2xl transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}>
+        <div className="flex items-center justify-center h-16 bg-gradient-to-r from-blue-600 to-indigo-600 border-b border-slate-700">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-lg">
+              <svg className="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
               </svg>
             </div>
-            <span className="text-xl font-bold text-white">ExpenseFlow</span>
+            <div>
+              <span className="text-xl font-bold text-white">ExpenseFlow</span>
+              <p className="text-xs text-blue-200">Professional Edition</p>
+            </div>
           </div>
         </div>
         
-        <nav className="mt-5 px-2">
-          <div className="space-y-1">
+        <nav className="mt-8 px-4">
+          <div className="space-y-2">
             {getNavItems().map((item) => (
               <Link
                 key={item.path}
                 to={item.path}
-                className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors ${
+                className={`group flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${
                   isActive(item.path)
-                    ? 'bg-primary text-white'
-                    : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                    ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg transform scale-105'
+                    : 'text-slate-300 hover:bg-slate-700/50 hover:text-white hover:transform hover:scale-105'
                 }`}
                 onClick={() => setSidebarOpen(false)}
               >
-                <span className="mr-3">{item.icon}</span>
-                {item.name}
+                <span className="mr-4 text-lg">{item.icon}</span>
+                <span className="font-medium">{item.name}</span>
               </Link>
             ))}
           </div>
         </nav>
 
-        <div className="absolute bottom-0 w-full p-4 border-t border-gray-700">
-          <div className="text-sm text-gray-300 mb-3">
-            <div className="font-medium">{user?.email}</div>
-            <div className="text-xs text-gray-400">{user?.role} • {company?.name}</div>
+        <div className="absolute bottom-0 w-full p-4 border-t border-slate-700/50">
+          <div className="bg-slate-800/50 rounded-xl p-4 mb-3">
+            <div className="flex items-center space-x-3 mb-2">
+              <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full flex items-center justify-center">
+                <span className="text-white font-bold text-sm">{user?.name?.charAt(0)}</span>
+              </div>
+              <div>
+                <div className="font-medium text-white text-sm">{user?.name}</div>
+                <div className="text-xs text-slate-400">{user?.role} • {company?.name}</div>
+              </div>
+            </div>
           </div>
           <button
             onClick={handleLogout}
-            className="w-full flex items-center px-2 py-2 text-sm font-medium text-gray-300 rounded-md hover:bg-gray-700 hover:text-white transition-colors"
+            className="w-full flex items-center justify-center px-4 py-3 text-sm font-medium text-slate-300 rounded-xl hover:bg-red-500/20 hover:text-red-400 transition-all duration-200 border border-slate-700 hover:border-red-500/50"
           >
-            <svg className="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+            <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clipRule="evenodd" />
             </svg>
-            Logout
+            Sign Out
           </button>
         </div>
       </div>
@@ -169,9 +189,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </div>
 
         {/* Page content */}
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50">
+        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gradient-to-br from-slate-50 to-blue-50/30">
           <div className="container mx-auto px-6 py-8">
-            {children}
+            <div className="max-w-7xl mx-auto">
+              {children}
+            </div>
           </div>
         </main>
       </div>

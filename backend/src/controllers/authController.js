@@ -9,13 +9,13 @@ const generateToken = (id) => {
 
 const signup = async (req, res) => {
   try {
-    const { name, email, password, companyName, country } = req.body;
+    const { name, email, password, companyName, country, currency } = req.body;
 
     // Create company first
     const company = new Company({
       name: companyName,
       country,
-      currency: 'USD', // Default currency
+      currency: currency || 'USD', // Use selected currency
       adminId: null
     });
     await company.save();
@@ -38,7 +38,7 @@ const signup = async (req, res) => {
     res.status(201).json({
       token,
       user: { id: user._id, name, email, role: user.role },
-      company: { id: company._id, name: companyName, country, currency: 'USD' }
+      company: { id: company._id, name: companyName, country, currency: currency || 'USD' }
     });
   } catch (error) {
     res.status(400).json({ error: error.message });

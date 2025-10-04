@@ -8,7 +8,7 @@ const router = express.Router();
 
 router.post('/', auth, upload.single('receipt'), submitExpense);
 router.get('/me', auth, getMyExpenses);
-router.get('/team', auth, authorize('Manager', 'Admin'), getTeamExpenses);
+router.get('/team', auth, authorize('Manager', 'Finance', 'Director', 'CFO', 'Admin'), getTeamExpenses);
 router.get('/', auth, authorize('Admin'), getAllExpenses);
 
 module.exports = router;

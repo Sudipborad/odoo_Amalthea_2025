@@ -1,5 +1,5 @@
 const express = require('express');
-const { createUser, updateUserRole, assignManager, getAllUsers } = require('../controllers/userController');
+const { createUser, updateUserRole, assignManager, deleteUser, getAllUsers } = require('../controllers/userController');
 const { auth, authorize } = require('../middleware/auth');
 
 const router = express.Router();
@@ -17,8 +17,12 @@ router.get('/me', auth, (req, res) => {
 });
 
 router.get('/', auth, authorize('Admin'), getAllUsers);
+router.get('/me', auth, (req, res) => {
+  res.json({ user: req.user });
+});
 router.post('/', auth, authorize('Admin'), createUser);
 router.put('/:id/role', auth, authorize('Admin'), updateUserRole);
 router.put('/:id/manager', auth, authorize('Admin'), assignManager);
+router.delete('/:id', auth, authorize('Admin'), deleteUser);
 
 module.exports = router;

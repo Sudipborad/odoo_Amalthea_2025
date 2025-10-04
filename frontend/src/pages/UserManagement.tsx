@@ -13,9 +13,11 @@ interface User {
 const UserManagement: React.FC = () => {
   const { user } = useAuth();
   const [users, setUsers] = useState([]);
+  const [filteredUsers, setFilteredUsers] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [error, setError] = useState('');
   const [backendUser, setBackendUser] = useState<User | null>(null);
+  const [roleFilter, setRoleFilter] = useState('All');
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -45,20 +47,22 @@ const UserManagement: React.FC = () => {
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch('http://localhost:5000/users', {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setUsers(data);
-        setError('');
-      } else {
-        const errorData = await response.json();
-        setError(errorData.error || 'Failed to fetch users');
-      }
-    } catch (error) {
+      const response = await userAPI.getAllUsers();
+      setUsers(response.data);
+      setFilteredUsers(response.data);
+      setError('');
+    } catch (error: any) {
       console.error('Error fetching users:', error);
-      setError('Failed to fetch users');
+      setError(error.response?.data?.error || 'Failed to fetch users');
+    }
+  };
+
+  const filterUsers = (role: string) => {
+    setRoleFilter(role);
+    if (role === 'All') {
+      setFilteredUsers(users);
+    } else {
+      setFilteredUsers(users.filter((u: any) => u.role === role));
     }
   };
 
@@ -96,14 +100,34 @@ const UserManagement: React.FC = () => {
     }
   };
 
+  const handleDeleteUser = async (userId: string, userName: string) => {
+    if (window.confirm(`Are you sure you want to delete ${userName}?`)) {
+      try {
+        await userAPI.deleteUser(userId);
+        fetchUsers();
+      } catch (error: any) {
+        setError(error.response?.data?.error || 'Failed to delete user');
+      }
+    }
+  };
+
   return (
     <Layout>
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">User Management</h1>
-            <p className="text-sm text-gray-600">Frontend user role: {user?.role}</p>
-            <p className="text-sm text-gray-600">Backend user role: {backendUser?.role || 'Loading...'}</p>
+            <div className="flex gap-2 mt-2">
+              {['All', 'Employee', 'Manager', 'Finance', 'Director', 'CFO', 'Admin'].map(role => (
+                <button
+                  key={role}
+                  onClick={() => filterUsers(role)}
+                  className={`px-3 py-1 text-sm rounded ${roleFilter === role ? 'bg-primary text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                >
+                  {role}
+                </button>
+              ))}
+            </div>
           </div>
           <button
             onClick={() => setShowForm(true)}
@@ -154,18 +178,23 @@ const UserManagement: React.FC = () => {
               >
                 <option value="Employee">Employee</option>
                 <option value="Manager">Manager</option>
+                <option value="Finance">Finance</option>
+                <option value="Director">Director</option>
+                <option value="CFO">CFO</option>
                 <option value="Admin">Admin</option>
               </select>
-              <select
-                value={formData.managerId}
-                onChange={(e) => setFormData({ ...formData, managerId: e.target.value })}
-                className="px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-              >
-                <option value="">Select Manager (Optional)</option>
-                {users.filter((u: any) => u.role === 'Manager').map((manager: any) => (
-                  <option key={manager._id} value={manager._id}>{manager.name}</option>
-                ))}
-              </select>
+              {formData.role === 'Employee' && (
+                <select
+                  value={formData.managerId}
+                  onChange={(e) => setFormData({ ...formData, managerId: e.target.value })}
+                  className="px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                >
+                  <option value="">Select Manager (Optional)</option>
+                  {users.filter((u: any) => ['Manager', 'Finance', 'Director', 'CFO'].includes(u.role)).map((manager: any) => (
+                    <option key={manager._id} value={manager._id}>{manager.name} ({manager.role})</option>
+                  ))}
+                </select>
+              )}
               <div className="md:col-span-2 flex gap-2">
                 <button
                   type="submit"
@@ -201,7 +230,7 @@ const UserManagement: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {users.map((user: any) => (
+                {filteredUsers.map((user: any) => (
                   <tr key={user._id}>
                     <td className="px-6 py-4 text-sm text-gray-900">{user.name}</td>
                     <td className="px-6 py-4 text-sm text-gray-900">{user.email}</td>
@@ -213,24 +242,35 @@ const UserManagement: React.FC = () => {
                       >
                         <option value="Employee">Employee</option>
                         <option value="Manager">Manager</option>
+                        <option value="Finance">Finance</option>
+                        <option value="Director">Director</option>
+                        <option value="CFO">CFO</option>
                         <option value="Admin">Admin</option>
                       </select>
                     </td>
+                    {user.role === 'Employee' ? (
+                      <td className="px-6 py-4 text-sm">
+                        <select
+                          value={user.managerId?._id || user.managerId || ''}
+                          onChange={(e) => handleManagerChange(user._id, e.target.value)}
+                          className="px-2 py-1 border rounded text-sm"
+                        >
+                          <option value="">No Manager</option>
+                          {users.filter((u: any) => ['Manager', 'Finance', 'Director', 'CFO'].includes(u.role) && u._id !== user._id).map((manager: any) => (
+                            <option key={manager._id} value={manager._id}>{manager.name} ({manager.role})</option>
+                          ))}
+                        </select>
+                      </td>
+                    ) : (
+                      <td className="px-6 py-4 text-sm text-gray-500">-</td>
+                    )}
                     <td className="px-6 py-4 text-sm">
-                      <select
-                        value={user.managerId || ''}
-                        onChange={(e) => handleManagerChange(user._id, e.target.value)}
-                        className="px-2 py-1 border rounded text-sm"
-                        disabled={user.role !== 'Employee'}
+                      <button 
+                        onClick={() => handleDeleteUser(user._id, user.name)}
+                        className="text-red-600 hover:text-red-800"
                       >
-                        <option value="">No Manager</option>
-                        {users.filter((u: any) => u.role === 'Manager' && u._id !== user._id).map((manager: any) => (
-                          <option key={manager._id} value={manager._id}>{manager.name}</option>
-                        ))}
-                      </select>
-                    </td>
-                    <td className="px-6 py-4 text-sm">
-                      <button className="text-primary hover:text-blue-600">Edit</button>
+                        Delete
+                      </button>
                     </td>
                   </tr>
                 ))}

@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { serviceAPI } from '../api';
 
 const Signup: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -8,12 +9,41 @@ const Signup: React.FC = () => {
     email: '',
     password: '',
     companyName: '',
-    country: ''
+    country: '',
+    currency: ''
   });
+  const [countries, setCountries] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const { signup } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    fetchCountries();
+  }, []);
+
+  const fetchCountries = async () => {
+    try {
+      const response = await fetch('https://restcountries.com/v3.1/all?fields=name,currencies');
+      const data = await response.json();
+      const countryList = data.map((country: any) => ({
+        name: country.name.common,
+        currencies: Object.keys(country.currencies || {})
+      })).sort((a: any, b: any) => a.name.localeCompare(b.name));
+      setCountries(countryList);
+    } catch (error) {
+      console.error('Error fetching countries:', error);
+    }
+  };
+
+  const handleCountryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedCountry = countries.find(c => c.name === e.target.value);
+    setFormData({ 
+      ...formData, 
+      country: e.target.value,
+      currency: selectedCountry?.currencies[0] || ''
+    });
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -116,16 +146,31 @@ const Signup: React.FC = () => {
               name="country"
               required
               value={formData.country}
-              onChange={handleChange}
+              onChange={handleCountryChange}
               className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
             >
               <option value="">Select Country</option>
-              <option value="United States">United States</option>
-              <option value="India">India</option>
-              <option value="United Kingdom">United Kingdom</option>
-              <option value="Canada">Canada</option>
+              {countries.map((country) => (
+                <option key={country.name} value={country.name}>
+                  {country.name}
+                </option>
+              ))}
             </select>
           </div>
+
+          {formData.currency && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Currency
+              </label>
+              <input
+                type="text"
+                value={formData.currency}
+                readOnly
+                className="w-full px-3 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-600"
+              />
+            </div>
+          )}
 
           <button
             type="submit"

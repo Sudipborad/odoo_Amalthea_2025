@@ -3,17 +3,31 @@ const User = require('../models/User');
 
 const auth = async (req, res, next) => {
   try {
-    const token = req.header('Authorization')?.replace('Bearer ', '');
-    if (!token) return res.status(401).json({ error: 'Access denied' });
+    console.log('Auth middleware - Request URL:', req.url);
+    const authHeader = req.header('Authorization');
+    console.log('Auth header:', authHeader ? 'exists' : 'missing');
+    
+    const token = authHeader?.replace('Bearer ', '');
+    if (!token) {
+      console.log('No token provided');
+      return res.status(401).json({ error: 'Access denied' });
+    }
 
+    console.log('JWT_SECRET exists:', !!process.env.JWT_SECRET);
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    console.log('Token decoded successfully, user ID:', decoded.id);
+    
     const user = await User.findById(decoded.id).populate('companyId');
-    if (!user) return res.status(401).json({ error: 'Invalid token' });
+    if (!user) {
+      console.log('User not found for ID:', decoded.id);
+      return res.status(401).json({ error: 'Invalid token' });
+    }
 
-    console.log('Backend auth - User role:', user.role); // Debug log
+    console.log('User found:', user.name, user.email, user.role);
     req.user = user;
     next();
   } catch (error) {
+    console.log('Auth error:', error.message);
     res.status(401).json({ error: 'Invalid token' });
   }
 };
