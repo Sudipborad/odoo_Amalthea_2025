@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
-import axios from 'axios';
+import { approvalAPI } from '../api';
 
 const Approvals: React.FC = () => {
   const [pendingExpenses, setPendingExpenses] = useState([]);
@@ -13,7 +13,7 @@ const Approvals: React.FC = () => {
 
   const fetchPendingApprovals = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/approvals/pending');
+      const response = await approvalAPI.getPendingApprovals();
       setPendingExpenses(response.data);
     } catch (error) {
       console.error('Error fetching pending approvals:', error);
@@ -25,10 +25,7 @@ const Approvals: React.FC = () => {
   const handleApproval = async (expenseId: string, decision: 'Approved' | 'Rejected', comments?: string) => {
     setProcessingId(expenseId);
     try {
-      await axios.post(`http://localhost:5000/approvals/${expenseId}`, {
-        decision,
-        comments
-      });
+      await approvalAPI.processApproval(expenseId, decision, comments);
       await fetchPendingApprovals();
     } catch (error) {
       console.error('Error processing approval:', error);

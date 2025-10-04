@@ -1,26 +1,92 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
-import axios from 'axios';
+import { expenseAPI, serviceAPI } from '../api';
+import { useAuth } from '../contexts/AuthContext';
 
 const SubmitExpense: React.FC = () => {
+  const { company } = useAuth();
+  
+  const getDefaultCurrency = () => {
+    if (!company) return 'USD';
+    return company.currency || 'USD';
+  };
+  
   const [formData, setFormData] = useState({
     originalAmount: '',
-    originalCurrency: 'USD',
+    originalCurrency: getDefaultCurrency(),
     category: '',
     description: '',
     date: new Date().toISOString().split('T')[0]
   });
+  
+  useEffect(() => {
+    if (company) {
+      setFormData(prev => ({
+        ...prev,
+        originalCurrency: company.currency || 'USD'
+      }));
+    }
+  }, [company]);
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
+  const [ocrLoading, setOcrLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [convertedAmount, setConvertedAmount] = useState<number | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+    
+    // Auto-convert currency when amount or currency changes
+    if ((name === 'originalAmount' || name === 'originalCurrency') && formData.originalAmount && company) {
+      convertCurrency(
+        name === 'originalAmount' ? parseFloat(value) : parseFloat(formData.originalAmount),
+        name === 'originalCurrency' ? value : formData.originalCurrency
+      );
+    }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setFile(e.target.files[0]);
+  const convertCurrency = async (amount: number, fromCurrency: string) => {
+    if (!company || fromCurrency === company.currency) {
+      setConvertedAmount(amount);
+      return;
+    }
+    
+    try {
+      const response = await serviceAPI.convertCurrency(fromCurrency, company.currency, amount);
+      setConvertedAmount(response.data.convertedAmount);
+    } catch (error) {
+      console.error('Currency conversion failed:', error);
+    }
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const selectedFile = e.target.files[0];
+      setFile(selectedFile);
+      
+      // Process OCR
+      setOcrLoading(true);
+      try {
+        const response = await serviceAPI.uploadOCR(selectedFile);
+        const ocrData = response.data;
+        
+        setFormData({
+          ...formData,
+          originalAmount: ocrData.amount.toString(),
+          description: ocrData.description,
+          date: ocrData.date
+        });
+        
+        // Convert currency for OCR amount
+        if (company) {
+          convertCurrency(ocrData.amount, formData.originalCurrency);
+        }
+      } catch (error) {
+        console.error('OCR processing failed:', error);
+      } finally {
+        setOcrLoading(false);
+      }
     }
   };
 
@@ -37,19 +103,20 @@ const SubmitExpense: React.FC = () => {
         submitData.append('receipt', file);
       }
 
-      await axios.post('http://localhost:5000/expenses', submitData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      await expenseAPI.submitExpense(submitData);
       
       setSuccess(true);
       setFormData({
         originalAmount: '',
-        originalCurrency: 'USD',
+        originalCurrency: company?.currency || 'USD',
         category: '',
         description: '',
         date: new Date().toISOString().split('T')[0]
       });
       setFile(null);
+      setConvertedAmount(null);
+      
+      setTimeout(() => setSuccess(false), 5000);
     } catch (error) {
       console.error('Error submitting expense:', error);
     } finally {
@@ -67,7 +134,7 @@ const SubmitExpense: React.FC = () => {
           
           {success && (
             <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded mb-6">
-              Expense submitted successfully!
+              ✅ Expense submitted successfully!
             </div>
           )}
 
@@ -76,7 +143,7 @@ const SubmitExpense: React.FC = () => {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Receipt Upload
               </label>
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-primary transition-colors">
                 <input
                   type="file"
                   onChange={handleFileChange}
@@ -85,11 +152,11 @@ const SubmitExpense: React.FC = () => {
                   id="receipt-upload"
                 />
                 <label htmlFor="receipt-upload" className="cursor-pointer">
-                  <div className="text-gray-400 mb-2">📎</div>
+                  <div className="text-4xl text-gray-400 mb-2">📎</div>
                   <p className="text-sm text-gray-600">
-                    {file ? file.name : 'Choose File No file chosen'}
+                    {ocrLoading ? 'Processing...' : file ? file.name : 'Choose File No file chosen'}
                   </p>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-blue-500 mt-1">
                     Upload receipt for automatic field population
                   </p>
                 </label>
@@ -110,6 +177,11 @@ const SubmitExpense: React.FC = () => {
                   onChange={handleChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                 />
+                {convertedAmount && company && formData.originalCurrency !== company.currency && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    ≈ {company.currency} {convertedAmount.toFixed(2)}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -126,6 +198,7 @@ const SubmitExpense: React.FC = () => {
                   <option value="EUR">EUR</option>
                   <option value="GBP">GBP</option>
                   <option value="INR">INR</option>
+                  <option value="CAD">CAD</option>
                 </select>
               </div>
             </div>
@@ -146,6 +219,7 @@ const SubmitExpense: React.FC = () => {
                 <option value="Meals">Meals</option>
                 <option value="Equipment">Equipment</option>
                 <option value="Software">Software</option>
+                <option value="Training">Training</option>
                 <option value="Other">Other</option>
               </select>
             </div>
@@ -181,7 +255,7 @@ const SubmitExpense: React.FC = () => {
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || ocrLoading}
               className="w-full bg-primary text-white py-3 px-4 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {loading ? 'Submitting...' : 'Submit Expense'}

@@ -10,6 +10,7 @@ const auth = async (req, res, next) => {
     const user = await User.findById(decoded.id).populate('companyId');
     if (!user) return res.status(401).json({ error: 'Invalid token' });
 
+    console.log('Backend auth - User role:', user.role); // Debug log
     req.user = user;
     next();
   } catch (error) {
@@ -19,8 +20,15 @@ const auth = async (req, res, next) => {
 
 const authorize = (...roles) => {
   return (req, res, next) => {
-    if (!roles.includes(req.user.role)) {
-      return res.status(403).json({ error: 'Access forbidden' });
+    if (!req.user) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+    
+    const userRole = req.user.role;
+    console.log('Backend authorize - Required roles:', roles, 'User role:', userRole); // Debug log
+    
+    if (!roles.includes(userRole)) {
+      return res.status(403).json({ error: `Access forbidden. Required roles: ${roles.join(', ')}. Your role: ${userRole}` });
     }
     next();
   };

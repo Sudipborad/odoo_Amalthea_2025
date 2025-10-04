@@ -1,28 +1,17 @@
 const Expense = require('../models/Expense');
 const ApprovalRule = require('../models/ApprovalRule');
-const ApprovalService = require('../services/approvalService');
+const ApprovalWorkflowService = require('../services/approvalWorkflowService');
 
 const processApproval = async (req, res) => {
   try {
     const { decision, comments } = req.body;
-    const expense = await Expense.findById(req.params.expenseId);
-    
-    if (!expense) return res.status(404).json({ error: 'Expense not found' });
-
-    const approval = expense.approvals.find(
-      a => a.approverId.toString() === req.user._id.toString()
+    const expense = await ApprovalWorkflowService.processApprovalDecision(
+      req.params.expenseId,
+      req.user._id,
+      decision,
+      comments
     );
     
-    if (!approval) return res.status(403).json({ error: 'Not authorized to approve this expense' });
-
-    approval.decision = decision;
-    approval.comments = comments;
-    approval.decisionDate = new Date();
-
-    const newStatus = await ApprovalService.checkApprovalStatus(expense);
-    expense.status = newStatus;
-
-    await expense.save();
     res.json({ message: 'Approval processed successfully', expense });
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -31,14 +20,26 @@ const processApproval = async (req, res) => {
 
 const getPendingApprovals = async (req, res) => {
   try {
-    const expenses = await Expense.find({
-      companyId: req.user.companyId._id,
-      'approvals.approverId': req.user._id,
-      'approvals.decision': 'Pending'
-    }).populate('employeeId', 'name email');
+    console.log('User requesting approvals:', req.user.name, req.user._id);
     
-    res.json(expenses);
+    // Find all expenses with pending status
+    const allPendingExpenses = await Expense.find({ status: 'Pending' })
+      .populate('employeeId', 'name email');
+    
+    console.log('All pending expenses:', allPendingExpenses.length);
+    
+    // Filter for this user's approvals
+    const userApprovals = allPendingExpenses.filter(expense => 
+      expense.approvals.some(approval => 
+        approval.approverId.toString() === req.user._id.toString() && 
+        approval.decision === 'Pending'
+      )
+    );
+    
+    console.log('User approvals found:', userApprovals.length);
+    res.json(userApprovals);
   } catch (error) {
+    console.error('Approval error:', error);
     res.status(400).json({ error: error.message });
   }
 };

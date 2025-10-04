@@ -10,7 +10,10 @@ import SubmitExpense from './pages/SubmitExpense';
 import MyExpenses from './pages/MyExpenses';
 import Approvals from './pages/Approvals';
 import TeamExpenses from './pages/TeamExpenses';
+import UserManagement from './pages/UserManagement';
+import ApprovalRules from './pages/ApprovalRules';
 import ProtectedRoute from './components/ProtectedRoute';
+import './App.css';
 
 function App() {
   return (
@@ -20,13 +23,58 @@ function App() {
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
-            <Route path="/employee" element={<ProtectedRoute role="Employee"><EmployeeDashboard /></ProtectedRoute>} />
-            <Route path="/manager" element={<ProtectedRoute role="Manager"><ManagerDashboard /></ProtectedRoute>} />
-            <Route path="/admin" element={<ProtectedRoute role="Admin"><AdminDashboard /></ProtectedRoute>} />
-            <Route path="/submit-expense" element={<ProtectedRoute><SubmitExpense /></ProtectedRoute>} />
-            <Route path="/my-expenses" element={<ProtectedRoute><MyExpenses /></ProtectedRoute>} />
-            <Route path="/approvals" element={<ProtectedRoute role={["Manager", "Admin"]}><Approvals /></ProtectedRoute>} />
-            <Route path="/team-expenses" element={<ProtectedRoute role={["Manager", "Admin"]}><TeamExpenses /></ProtectedRoute>} />
+            
+            {/* Employee Routes */}
+            <Route path="/employee" element={
+              <ProtectedRoute role="Employee">
+                <EmployeeDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/submit-expense" element={
+              <ProtectedRoute role="Employee">
+                <SubmitExpense />
+              </ProtectedRoute>
+            } />
+            <Route path="/my-expenses" element={
+              <ProtectedRoute role="Employee">
+                <MyExpenses />
+              </ProtectedRoute>
+            } />
+            
+            {/* Manager Routes */}
+            <Route path="/manager" element={
+              <ProtectedRoute role="Manager">
+                <ManagerDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/approvals" element={
+              <ProtectedRoute role={["Manager", "Admin"]}>
+                <Approvals />
+              </ProtectedRoute>
+            } />
+            <Route path="/team-expenses" element={
+              <ProtectedRoute role={["Manager", "Admin"]}>
+                <TeamExpenses />
+              </ProtectedRoute>
+            } />
+            
+            {/* Admin Routes */}
+            <Route path="/admin" element={
+              <ProtectedRoute role="Admin">
+                <AdminDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/users" element={
+              <ProtectedRoute role="Admin">
+                <UserManagement />
+              </ProtectedRoute>
+            } />
+            <Route path="/approval-rules" element={
+              <ProtectedRoute role="Admin">
+                <ApprovalRules />
+              </ProtectedRoute>
+            } />
+            
             <Route path="/" element={<Navigate to="/login" />} />
           </Routes>
         </div>

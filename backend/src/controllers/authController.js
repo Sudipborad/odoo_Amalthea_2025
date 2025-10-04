@@ -11,19 +11,16 @@ const signup = async (req, res) => {
   try {
     const { name, email, password, companyName, country } = req.body;
 
-    const countries = await CurrencyService.getCountriesWithCurrencies();
-    const selectedCountry = countries.find(c => c.name === country);
-    if (!selectedCountry) return res.status(400).json({ error: 'Invalid country' });
-
-    const currency = selectedCountry.currencies[0];
-
+    // Create company first
     const company = new Company({
       name: companyName,
       country,
-      currency,
+      currency: 'USD', // Default currency
       adminId: null
     });
+    await company.save();
 
+    // Create admin user
     const user = new User({
       name,
       email,
@@ -31,16 +28,17 @@ const signup = async (req, res) => {
       role: 'Admin',
       companyId: company._id
     });
+    await user.save();
 
+    // Update company with admin ID
     company.adminId = user._id;
     await company.save();
-    await user.save();
 
     const token = generateToken(user._id);
     res.status(201).json({
       token,
       user: { id: user._id, name, email, role: user.role },
-      company: { id: company._id, name: companyName, country, currency }
+      company: { id: company._id, name: companyName, country, currency: 'USD' }
     });
   } catch (error) {
     res.status(400).json({ error: error.message });

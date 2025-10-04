@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import axios from 'axios';
+import { useAuth } from '../contexts/AuthContext';
 
 const TeamExpenses: React.FC = () => {
+  const { user } = useAuth();
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -12,7 +14,9 @@ const TeamExpenses: React.FC = () => {
 
   const fetchTeamExpenses = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/expenses');
+      const response = await axios.get('http://localhost:5000/expenses/team', {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
       setExpenses(response.data);
     } catch (error) {
       console.error('Error fetching team expenses:', error);
@@ -43,11 +47,15 @@ const TeamExpenses: React.FC = () => {
   return (
     <Layout>
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold text-gray-900">Team Expenses</h1>
+        <h1 className="text-2xl font-bold text-gray-900">
+          {user?.role === 'Admin' ? 'All Company Expenses' : 'Team Expenses'}
+        </h1>
         
         <div className="bg-white rounded-lg shadow-sm border">
           <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900">All Team Member Expenses</h2>
+            <h2 className="text-lg font-semibold text-gray-900">
+              {user?.role === 'Admin' ? 'All Company Expenses' : 'Team Member Expenses'}
+            </h2>
           </div>
           
           <div className="overflow-x-auto">

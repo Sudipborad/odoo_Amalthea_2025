@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import axios from 'axios';
+import { authAPI } from '../api';
 
 interface User {
   id: string;
@@ -8,8 +8,16 @@ interface User {
   role: string;
 }
 
+interface Company {
+  id: string;
+  name: string;
+  country: string;
+  currency: string;
+}
+
 interface AuthContextType {
   user: User | null;
+  company: Company | null;
   token: string | null;
   login: (email: string, password: string) => Promise<void>;
   signup: (data: any) => Promise<void>;
@@ -29,43 +37,65 @@ export const useAuth = () => {
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [company, setCompany] = useState<Company | null>(null);
   const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (token) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    const storedToken = localStorage.getItem('token');
+    if (storedToken) {
+      setToken(storedToken);
+      // Don't rely on stored user data, it might be outdated
+      const storedUser = localStorage.getItem('user');
+      const storedCompany = localStorage.getItem('company');
+      if (storedUser && storedCompany) {
+        setUser(JSON.parse(storedUser));
+        setCompany(JSON.parse(storedCompany));
+      }
     }
     setLoading(false);
-  }, [token]);
+  }, []);
 
   const login = async (email: string, password: string) => {
-    const response = await axios.post('http://localhost:5000/auth/login', { email, password });
-    const { token, user } = response.data;
+    const response = await authAPI.login(email, password);
+    const { token, user, company } = response.data;
+    
     setToken(token);
     setUser(user);
+    setCompany(company);
+    
     localStorage.setItem('token', token);
-    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    localStorage.setItem('user', JSON.stringify(user));
+    localStorage.setItem('company', JSON.stringify(company));
   };
 
   const signup = async (data: any) => {
-    const response = await axios.post('http://localhost:5000/auth/signup', data);
-    const { token, user } = response.data;
+    const response = await authAPI.signup(data);
+    const { token, user, company } = response.data;
+    
     setToken(token);
     setUser(user);
+    setCompany(company);
+    
     localStorage.setItem('token', token);
-    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    localStorage.setItem('user', JSON.stringify(user));
+    localStorage.setItem('company', JSON.stringify(company));
   };
 
   const logout = () => {
     setUser(null);
+    setCompany(null);
     setToken(null);
     localStorage.removeItem('token');
-    delete axios.defaults.headers.common['Authorization'];
+    localStorage.removeItem('user');
+    localStorage.removeItem('company');
   };
 
+  // Debug log to check user role
+  console.log('Current user:', user);
+
   return (
-    <AuthContext.Provider value={{ user, token, login, signup, logout, loading }}>
+    <AuthContext.Provider value={{ user, company, token, login, signup, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );
