@@ -316,7 +316,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - **Developer**: Sudip Borad
 - **Institution**: Charusat
-- **Event**: Amalthea 2025
+- **Event**: Odoo x Amalthea 2025
 
 ## 📞 Support
 
