@@ -5,6 +5,7 @@ A comprehensive multi-role expense reimbursement system built with React, Node.j
 ## 🚀 Features
 
 ### Core Functionality
+
 - **Multi-Role System**: Employee, Manager, Finance, Director, CFO, Admin roles
 - **OCR Receipt Processing**: Automatic data extraction from receipt images
 - **Hierarchical Approval Workflow**: Configurable approval rules and sequences
@@ -12,6 +13,7 @@ A comprehensive multi-role expense reimbursement system built with React, Node.j
 - **Company Isolation**: Multi-tenant architecture with data separation
 
 ### User Roles & Capabilities
+
 - **Employee**: Submit expenses, view personal expense history
 - **Manager**: Approve team expenses, submit expenses for team members
 - **Finance/Director**: Review and approve expenses based on rules
@@ -19,6 +21,7 @@ A comprehensive multi-role expense reimbursement system built with React, Node.j
 - **Admin**: User management, approval rules, system configuration
 
 ### Advanced Features
+
 - **Real-time Analytics**: Expense trends, category breakdowns, approval metrics
 - **Dashboard Views**: Role-specific dashboards with relevant insights
 - **Receipt Upload**: Image processing with automatic data extraction
@@ -29,6 +32,7 @@ A comprehensive multi-role expense reimbursement system built with React, Node.j
 ## 🛠️ Tech Stack
 
 ### Backend
+
 - **Node.js** with Express.js
 - **MongoDB** with Mongoose ODM
 - **JWT** for authentication
@@ -36,6 +40,7 @@ A comprehensive multi-role expense reimbursement system built with React, Node.j
 - **Tesseract.js** for OCR processing
 
 ### Frontend
+
 - **React** with TypeScript
 - **Tailwind CSS** for styling
 - **Context API** for state management
@@ -54,6 +59,7 @@ Before setting up the application, ensure you have:
 ## 🔧 Installation & Setup
 
 ### 1. Clone the Repository
+
 ```bash
 git clone https://github.com/Sudipborad/odoo_Amalthea_2025.git
 cd odoo_Amalthea_2025
@@ -62,17 +68,21 @@ cd odoo_Amalthea_2025
 ### 2. Backend Setup
 
 #### Navigate to backend directory
+
 ```bash
 cd backend
 ```
 
 #### Install dependencies
+
 ```bash
 npm install
 ```
 
 #### Environment Configuration
+
 Create a `.env` file in the backend directory:
+
 ```env
 PORT=5000
 MONGODB_URI=mongodb://localhost:27017/expense-reimbursement
@@ -81,7 +91,9 @@ NODE_ENV=development
 ```
 
 #### Start MongoDB
+
 Make sure MongoDB is running on your system:
+
 ```bash
 # Windows (if MongoDB is installed as service)
 net start MongoDB
@@ -94,27 +106,33 @@ sudo systemctl start mongod
 ```
 
 #### Start Backend Server
+
 ```bash
 npm start
 ```
+
 Backend will run on `http://localhost:5000`
 
 ### 3. Frontend Setup
 
 #### Navigate to frontend directory (new terminal)
+
 ```bash
 cd frontend
 ```
 
 #### Install dependencies
+
 ```bash
 npm install
 ```
 
 #### Start Frontend Development Server
+
 ```bash
 npm start
 ```
+
 Frontend will run on `http://localhost:3000`
 
 ## 🎯 Usage Guide
@@ -123,7 +141,8 @@ Frontend will run on `http://localhost:3000`
 
 1. **Access the Application**: Open `http://localhost:3000`
 
-2. **Admin Registration**: 
+2. **Admin Registration**:
+
    - Click "Sign Up"
    - Select "Admin" role
    - Choose country (sets company currency)
@@ -138,11 +157,13 @@ Frontend will run on `http://localhost:3000`
 ### Expense Workflow
 
 1. **Submit Expense** (Employee):
+
    - Upload receipt image
    - OCR automatically extracts data
    - Review and submit
 
 2. **Approval Process**:
+
    - Managers approve team expenses
    - Higher roles can override approvals
    - CFO has universal approval authority
@@ -181,6 +202,7 @@ expense-reimbursement-system/
 ## 🔐 Authentication & Authorization
 
 ### Role Hierarchy (1-6 scale)
+
 1. **Employee** - Basic expense submission
 2. **Manager** - Team expense approval
 3. **Finance** - Financial review and approval
@@ -189,6 +211,7 @@ expense-reimbursement-system/
 6. **Admin** - System administration
 
 ### Security Features
+
 - JWT-based authentication
 - Role-based access control
 - Company data isolation
@@ -197,19 +220,23 @@ expense-reimbursement-system/
 ## 📊 API Endpoints
 
 ### Authentication
+
 - `POST /api/auth/signup` - User registration
 - `POST /api/auth/login` - User login
 
 ### Expenses
+
 - `POST /api/expenses` - Submit expense
 - `GET /api/expenses/me` - Get user expenses
 - `GET /api/expenses/team` - Get team expenses
 
 ### Approvals
+
 - `GET /api/approvals/pending` - Get pending approvals
 - `POST /api/approvals/:id` - Process approval
 
 ### Services
+
 - `POST /api/services/ocr/upload` - OCR processing
 - `GET /api/services/currency/convert` - Currency conversion
 
@@ -218,6 +245,7 @@ expense-reimbursement-system/
 ### Common Issues
 
 1. **MongoDB Connection Error**
+
    ```bash
    # Check if MongoDB is running
    mongosh
@@ -225,6 +253,7 @@ expense-reimbursement-system/
    ```
 
 2. **Port Already in Use**
+
    ```bash
    # Kill process on port 5000
    npx kill-port 5000
@@ -232,6 +261,7 @@ expense-reimbursement-system/
    ```
 
 3. **OCR Not Working**
+
    - Ensure image files are properly uploaded
    - Check file size limits (default: 5MB)
    - Verify Tesseract.js installation
@@ -248,6 +278,7 @@ expense-reimbursement-system/
 ## 🚀 Deployment
 
 ### Production Environment Variables
+
 ```env
 NODE_ENV=production
 MONGODB_URI=mongodb://your-production-db-url
@@ -256,12 +287,14 @@ PORT=5000
 ```
 
 ### Build Frontend
+
 ```bash
 cd frontend
 npm run build
 ```
 
 ### Deploy Options
+
 - **Heroku**: Use provided Procfile
 - **AWS**: EC2 with PM2 process manager
 - **Docker**: Containerized deployment
@@ -282,12 +315,13 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 👥 Team
 
 - **Developer**: Sudip Borad
-- **Institution**: IIT Gandhinagar
+- **Institution**: Charusat
 - **Event**: Amalthea 2025
 
 ## 📞 Support
 
 For support and queries:
+
 - Create an issue on GitHub
 - Email: support@expense-system.com
 
